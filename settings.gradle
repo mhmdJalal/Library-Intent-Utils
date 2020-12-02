@@ -1,0 +1,3 @@
+rootProject.name='Library-Intent-Util'
+include ':app'
+include ':library-intent-util'
