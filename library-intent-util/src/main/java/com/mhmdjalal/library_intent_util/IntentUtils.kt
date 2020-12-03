@@ -29,33 +29,27 @@ import org.jetbrains.anko.AnkoException
 import java.io.Serializable
 
 /*
-* Created by Muhamad Jalaludin @2020
+* startActivityForResult - run on activity
 *
+* with/without passing data intent
 * */
-object IntentUtil {
+inline fun <reified T: Activity> ComponentActivity.startActivityForResult(params: List<Pair<String, Any?>> = arrayListOf(), crossinline result: (ActivityResult) -> Unit) {
+    val intent = createIntent(this, T::class.java, params)
 
-    /*
-    * Usage intent with passing data
-    *
-    * val params = arrayListOf<Pair<String, Any?>>()
-    * params.add(Pair("key", "value"))
-    *
-    * startActivityForResult<ForumDetailActivity>(params) {
-    *     if (it.resultCode == RESULT_OK) {
-    *         // result success
-    *     } else {
-    *         // result failed
-    *     }
-    * }
-    * */
+    val launcher: ActivityResultLauncher<Intent> = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()) {
+        result(it)
+    }
+    launcher.launch(intent)
+}
 
-    /*
-    * startActivityForResult - run on activity
-    *
-    * without data intent passed
-    * */
-    @JvmStatic
-    inline fun <reified T: Activity> ComponentActivity.startActivityForResult(params: List<Pair<String, Any?>>, crossinline result: (ActivityResult) -> Unit) {
+/*
+* startActivityForResult - run on fragment
+*
+* with/without passing data intent
+* */
+inline fun <reified T: Activity> Fragment.startActivityForResult(params: List<Pair<String, Any?>> = arrayListOf(), crossinline result: (ActivityResult) -> Unit) {
+    this.requireActivity().run {
         val intent = createIntent(this, T::class.java, params)
 
         val launcher: ActivityResultLauncher<Intent> = registerForActivityResult(
@@ -64,99 +58,45 @@ object IntentUtil {
         }
         launcher.launch(intent)
     }
+}
 
-    /*
-    * startActivityForResult - run on activity
-    *
-    * without data intent passed
-    * */
-    @JvmStatic
-    inline fun <reified T: Activity> ComponentActivity.startActivityForResult(crossinline result: (ActivityResult) -> Unit) {
-        this.run {
-            val intent = Intent(this, T::class.java)
-            val launcher: ActivityResultLauncher<Intent> = registerForActivityResult(
-                ActivityResultContracts.StartActivityForResult()) {
-                result(it)
-            }
-            launcher.launch(intent)
-        }
-    }
+fun <T> createIntent(ctx: Context, clazz: Class<out T>, params: List<Pair<String, Any?>>): Intent {
+    val intent = Intent(ctx, clazz)
+    if (params.isNotEmpty()) fillIntentArguments(intent, params)
+    return intent
+}
 
-    /*
-    * startActivityForResult - run on fragment
-    *
-    * without data intent passed
-    * */
-    @JvmStatic
-    inline fun <reified T: Activity> Fragment.startActivityForResult(crossinline result: (ActivityResult) -> Unit) {
-        this.requireActivity().run {
-            val intent = Intent(this, T::class.java)
-            val launcher: ActivityResultLauncher<Intent> = registerForActivityResult(
-                ActivityResultContracts.StartActivityForResult()) {
-                result(it)
-            }
-            launcher.launch(intent)
-        }
-    }
-
-    /*
-    * startActivityForResult - run on fragment
-    *
-    * with data intent passed
-    * */
-    @JvmStatic
-    inline fun <reified T: Activity> Fragment.startActivityForResult(params: List<Pair<String, Any?>>, crossinline result: (ActivityResult) -> Unit) {
-        this.requireActivity().run {
-            val intent = createIntent(this, T::class.java, params)
-
-            val launcher: ActivityResultLauncher<Intent> = registerForActivityResult(
-                ActivityResultContracts.StartActivityForResult()) {
-                result(it)
-            }
-            launcher.launch(intent)
-        }
-    }
-
-    @JvmStatic
-    fun <T> createIntent(ctx: Context, clazz: Class<out T>, params: List<Pair<String, Any?>>): Intent {
-        val intent = Intent(ctx, clazz)
-        if (params.isNotEmpty()) fillIntentArguments(intent, params)
-        return intent
-    }
-
-    @JvmStatic
-    private fun fillIntentArguments(intent: Intent, params: List<Pair<String, Any?>>) {
-        params.forEach {
-            when (val value = it.second) {
-                null -> intent.putExtra(it.first, null as Serializable?)
-                is Int -> intent.putExtra(it.first, value)
-                is Long -> intent.putExtra(it.first, value)
-                is CharSequence -> intent.putExtra(it.first, value)
-                is String -> intent.putExtra(it.first, value)
-                is Float -> intent.putExtra(it.first, value)
-                is Double -> intent.putExtra(it.first, value)
-                is Char -> intent.putExtra(it.first, value)
-                is Short -> intent.putExtra(it.first, value)
-                is Boolean -> intent.putExtra(it.first, value)
-                is Serializable -> intent.putExtra(it.first, value)
-                is Bundle -> intent.putExtra(it.first, value)
-                is Parcelable -> intent.putExtra(it.first, value)
-                is Array<*> -> when {
-                    value.isArrayOf<CharSequence>() -> intent.putExtra(it.first, value)
-                    value.isArrayOf<String>() -> intent.putExtra(it.first, value)
-                    value.isArrayOf<Parcelable>() -> intent.putExtra(it.first, value)
-                    else -> throw AnkoException("Intent extra ${it.first} has wrong type ${value.javaClass.name}")
-                }
-                is IntArray -> intent.putExtra(it.first, value)
-                is LongArray -> intent.putExtra(it.first, value)
-                is FloatArray -> intent.putExtra(it.first, value)
-                is DoubleArray -> intent.putExtra(it.first, value)
-                is CharArray -> intent.putExtra(it.first, value)
-                is ShortArray -> intent.putExtra(it.first, value)
-                is BooleanArray -> intent.putExtra(it.first, value)
+private fun fillIntentArguments(intent: Intent, params: List<Pair<String, Any?>>) {
+    params.forEach {
+        when (val value = it.second) {
+            null -> intent.putExtra(it.first, null as Serializable?)
+            is Int -> intent.putExtra(it.first, value)
+            is Long -> intent.putExtra(it.first, value)
+            is CharSequence -> intent.putExtra(it.first, value)
+            is String -> intent.putExtra(it.first, value)
+            is Float -> intent.putExtra(it.first, value)
+            is Double -> intent.putExtra(it.first, value)
+            is Char -> intent.putExtra(it.first, value)
+            is Short -> intent.putExtra(it.first, value)
+            is Boolean -> intent.putExtra(it.first, value)
+            is Serializable -> intent.putExtra(it.first, value)
+            is Bundle -> intent.putExtra(it.first, value)
+            is Parcelable -> intent.putExtra(it.first, value)
+            is Array<*> -> when {
+                value.isArrayOf<CharSequence>() -> intent.putExtra(it.first, value)
+                value.isArrayOf<String>() -> intent.putExtra(it.first, value)
+                value.isArrayOf<Parcelable>() -> intent.putExtra(it.first, value)
                 else -> throw AnkoException("Intent extra ${it.first} has wrong type ${value.javaClass.name}")
             }
-            return@forEach
+            is IntArray -> intent.putExtra(it.first, value)
+            is LongArray -> intent.putExtra(it.first, value)
+            is FloatArray -> intent.putExtra(it.first, value)
+            is DoubleArray -> intent.putExtra(it.first, value)
+            is CharArray -> intent.putExtra(it.first, value)
+            is ShortArray -> intent.putExtra(it.first, value)
+            is BooleanArray -> intent.putExtra(it.first, value)
+            else -> throw AnkoException("Intent extra ${it.first} has wrong type ${value.javaClass.name}")
         }
+        return@forEach
     }
 }
