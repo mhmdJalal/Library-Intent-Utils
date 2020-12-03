@@ -23,7 +23,7 @@ This library is inspired by Jetbrains Anko Commons
 <dependency>
     <groupId>com.github.mhmdJalal</groupId>
     <artifactId>Library-Intent-Utils</artifactId>
-    <version>Tag</version>
+    <version>v0.2.0</version>
 </dependency>
 ```
 
@@ -44,7 +44,7 @@ dependencies {
     implementation 'com.github.mhmdJalal:Library-Intent-Utils:release_version'
 }
 ```
-You can change the release_version to the latest version ```0.2.0```
+You can change the release_version to the latest version ```v0.2.0```
 
 ## Examples of Use
 
