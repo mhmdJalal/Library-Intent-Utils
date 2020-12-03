@@ -1,4 +1,3 @@
-package com.mhmdjalal.library_intent_util
 /*
  * Copyright 2020 Muhamad Jalaludin
  *
@@ -15,6 +14,9 @@ package com.mhmdjalal.library_intent_util
  * limitations under the License.
  */
 
+@file:Suppress("NOTHING_TO_INLINE", "unused")
+package com.mhmdjalal.library_intent_util
+
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
@@ -28,11 +30,14 @@ import androidx.fragment.app.Fragment
 import org.jetbrains.anko.AnkoException
 import java.io.Serializable
 
-/*
-* startActivityForResult - run on activity
-*
-* with/without passing data intent
-* */
+
+/**
+ *  startActivityForResult - run on activity
+ *  with/without passing data intent
+ *
+ *  @param params: the data set to be sent with the intent (type List<Pair<key, value>>)
+ *  @param result: the return value of an intent
+ * */
 inline fun <reified T: Activity> ComponentActivity.startActivityForResult(params: List<Pair<String, Any?>> = arrayListOf(), crossinline result: (ActivityResult) -> Unit) {
     val intent = createIntent(this, T::class.java, params)
 
@@ -43,11 +48,14 @@ inline fun <reified T: Activity> ComponentActivity.startActivityForResult(params
     launcher.launch(intent)
 }
 
-/*
-* startActivityForResult - run on fragment
-*
-* with/without passing data intent
-* */
+
+/**
+ *   startActivityForResult - run on fragment
+ *   with/without passing data intent
+ *
+ *   @param params: the data set to be sent with the intent (type List<Pair<key, value>>)
+ *   @param result: the return value of an intent
+ * */
 inline fun <reified T: Activity> Fragment.startActivityForResult(params: List<Pair<String, Any?>> = arrayListOf(), crossinline result: (ActivityResult) -> Unit) {
     this.requireActivity().run {
         val intent = createIntent(this, T::class.java, params)
@@ -60,13 +68,130 @@ inline fun <reified T: Activity> Fragment.startActivityForResult(params: List<Pa
     }
 }
 
-fun <T> createIntent(ctx: Context, clazz: Class<out T>, params: List<Pair<String, Any?>>): Intent {
-    val intent = Intent(ctx, clazz)
-    if (params.isNotEmpty()) fillIntentArguments(intent, params)
-    return intent
+
+/**
+ *  function to create an intent
+ *
+ *  @param context: the context needed to execute the intent
+ *  @param clazz: the class you want to target with an intent
+ *  @param params: the data set to be sent with the intent (type List<Pair<key, value>>)
+ * */
+fun <T> createIntent(context: Context, clazz: Class<out T>, params: List<Pair<String, Any?>>): Intent =
+    Intent(context, clazz).apply {
+        if (params.isNotEmpty()) fillIntentArguments(this, params)
+    }
+
+
+/**
+ *  function to pass arguments to the intent
+ *
+ *  @param intent: initialized intent to populate arguments
+ *  @param params: the data set to be sent with the intent (type List<Pair<key, value>>)
+ *
+ * */
+private fun fillIntentArguments(intent: Intent, params: List<Pair<String, Any?>>) {
+    params.forEach {
+        when (val value = it.second) {
+            null -> intent.putExtra(it.first, null as Serializable?)
+            is Int -> intent.putExtra(it.first, value)
+            is Long -> intent.putExtra(it.first, value)
+            is CharSequence -> intent.putExtra(it.first, value)
+            is String -> intent.putExtra(it.first, value)
+            is Float -> intent.putExtra(it.first, value)
+            is Double -> intent.putExtra(it.first, value)
+            is Char -> intent.putExtra(it.first, value)
+            is Short -> intent.putExtra(it.first, value)
+            is Boolean -> intent.putExtra(it.first, value)
+            is Serializable -> intent.putExtra(it.first, value)
+            is Bundle -> intent.putExtra(it.first, value)
+            is Parcelable -> intent.putExtra(it.first, value)
+            is Array<*> -> when {
+                value.isArrayOf<CharSequence>() -> intent.putExtra(it.first, value)
+                value.isArrayOf<String>() -> intent.putExtra(it.first, value)
+                value.isArrayOf<Parcelable>() -> intent.putExtra(it.first, value)
+                else -> throw AnkoException("Intent extra ${it.first} has wrong type ${value.javaClass.name}")
+            }
+            is IntArray -> intent.putExtra(it.first, value)
+            is LongArray -> intent.putExtra(it.first, value)
+            is FloatArray -> intent.putExtra(it.first, value)
+            is DoubleArray -> intent.putExtra(it.first, value)
+            is CharArray -> intent.putExtra(it.first, value)
+            is ShortArray -> intent.putExtra(it.first, value)
+            is BooleanArray -> intent.putExtra(it.first, value)
+            else -> throw AnkoException("Intent extra ${it.first} has wrong type ${value.javaClass.name}")
+        }
+        return@forEach
+    }
 }
 
-private fun fillIntentArguments(intent: Intent, params: List<Pair<String, Any?>>) {
+
+/**
+ *  startActivity for fragment
+ *  with/without passing data intent
+ *
+ *  @param params: the data set to be sent with the intent (type List<Pair<key, value>>)
+ *  @param T: the activity class you want to target with an intent
+ * */
+inline fun <reified T: Activity> Fragment.startActivityFromFragment(params: List<Pair<String, Any?>> = arrayListOf()) = this.context?.let {
+    startActivity(createIntent(it, T::class.java, params))
+}
+
+
+/**
+ *  startActivity for fragment
+ *  with/without passing data intent
+ *
+ *  @param params: the data set to be sent with the intent (type arrayOf<Pair<String, Any?>>)
+ *  @param T: the activity class you want to target with an intent
+ * */
+inline fun <reified T: Activity> Fragment.startActivityFromFragment(vararg params: Pair<String, Any?>) = this.context?.let {
+    startActivity(createIntent(it, T::class.java, params))
+}
+
+
+/**
+ *  startActivity for activity
+ *  with/without passing data intent
+ *
+ *  @param params: the data set to be sent with the intent (type List<Pair<key, value>>)
+ *  @param T: the activity class you want to target with an intent
+ * */
+inline fun <reified T: Activity> ComponentActivity.startActivity(params: List<Pair<String, Any?>> = arrayListOf()) =
+    startActivity(createIntent(this, T::class.java, params))
+
+
+/**
+ *  startActivity for activity
+ *  with/without passing data intent
+ *
+ *  @param params: the data set to be sent with the intent (type arrayOf<Pair<String, Any?>>)
+ *  @param T: the activity class you want to target with an intent
+ * */
+inline fun <reified T: Activity> ComponentActivity.startActivity(vararg params: Pair<String, Any?>) =
+    startActivity(createIntent(this, T::class.java, params))
+
+
+/**
+ *  function to create an intent
+ *
+ *  @param context: the context needed to execute the intent
+ *  @param clazz: the class you want to target with an intent
+ *  @param params: the data set to be sent with the intent
+ * */
+fun <T> createIntent(context: Context, clazz: Class<out T>, params: Array<out Pair<String, Any?>>): Intent =
+    Intent(context, clazz).apply {
+        if (params.isNotEmpty()) fillIntentArguments(this, params)
+    }
+
+
+/**
+ *  function to pass arguments to the intent
+ *
+ *  @param intent: initialized intent to populate arguments
+ *  @param params: the data set to be sent with the intent
+ *
+ * */
+private fun fillIntentArguments(intent: Intent, params: Array<out Pair<String, Any?>>) {
     params.forEach {
         when (val value = it.second) {
             null -> intent.putExtra(it.first, null as Serializable?)
